@@ -22,8 +22,4 @@ class BankAccount:
         return self.__balance
 
 
-# Создание объекта класса BankAccount
-account = BankAccount(100)
-account.deposit(50)
-account.withdraw(30)
-print(account.get_balance())  # Вывод: 120
+# Тесты в Bank_test.py
