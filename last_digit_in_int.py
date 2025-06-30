@@ -7,7 +7,7 @@ class Num:
             0: 'Ноль'}
 
     def last_digit(self, num):
-        last_num = int(str(num)[-1:])
+        last_num = num % 10
         answer = self.nums.get(last_num)
         return answer
 
@@ -15,4 +15,4 @@ class Num:
 def test_func():
     n1 = Num()
     for i in range(10, 20):
-        assert n1.last_digit(i) == n1.nums.get(int(str(i)[-1:]))
+        assert n1.last_digit(i) == n1.nums.get(i % 10)
