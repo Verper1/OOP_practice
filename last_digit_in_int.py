@@ -6,14 +6,13 @@ class Num:
     nums = {1: 'Один', 2: 'Два', 3: 'Три', 4: 'Четыре', 5: 'Пять', 6: 'Шесть', 7: 'Семь', 8: 'Восемь', 9: 'Девять',
             0: 'Ноль'}
 
-    def __init__(self, num: int):
-        self.num = num
-
-        print(self.last_digit())
-
-    def last_digit(self):
-        self.num = str(self.num)[-1:]
-        return self.num
+    def last_digit(self, num):
+        last_num = int(str(num)[-1:])
+        answer = self.nums.get(last_num)
+        return answer
 
 
-n1 = Num(212354321)
+def test_func():
+    n1 = Num()
+    for i in range(10, 20):
+        assert n1.last_digit(i) == n1.nums.get(int(str(i)[-1:]))
