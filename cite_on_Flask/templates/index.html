@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}<title>Главная</title>{% endblock %}
+
+{% block body %}
+<div class="pricing-header p-3 pb-md-4 mx-auto text-center">
+    <h1 class="display-4 fw-normal text-body-emphasis">Мои записи</h1>
+    <p class="fs-5 text-body-secondary">Здесь будут расположены все записи.</p>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+    {% for el in data %}
+        <div class="col">
+            <div class="card mb-4 rounded-3 shadow-sm">
+                <div class="card-header py-3">
+                    <h1 class="my-0 fw-normal">{{ el.title }}</h1>
+                </div>
+                <div class="card-body">
+                    <h4 class="card-title pricing-card-title">
+                        {{ el.description }}
+                    </h4><br>
+<!--                    <ul class="list-unstyled mt-3 mb-4">-->
+<!--                        <li>10 users included</li>-->
+<!--                        <li>2 GB of storage</li>-->
+<!--                        <li>Email support</li>-->
+<!--                        <li>Help center access</li>-->
+<!--                    </ul>-->
+                    <form method="POST">
+                        <input type="hidden" name="title" value="{{ el.title }}">
+                        <input type="hidden" name="description" value="{{ el.description }}">
+                        <button class="btn btn-warning" type="submit">Удалить запись</button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
