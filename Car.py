@@ -9,7 +9,7 @@ class Car:
         self.year = year
 
     def display_details(self):
-        print(f"Make: {self.make}, Model: {self.model}, Year: {self.year}")
+        print(f"Make: {self.make}, Model: {self.model}, Year: {self.year}.")
 
 
 my_car = Car("Toyota", "Corolla", 2021)
