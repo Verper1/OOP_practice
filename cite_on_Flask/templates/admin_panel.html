@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}<title>Админ-Панель</title>{% endblock %}
+
+{% block body %}
+<!-- Header -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Логотип</a>
+        <div class="d-flex align-items-center">
+            <span class="me-3">Привет, Админ</span>
+            <button class="btn btn-outline-secondary" type="button">Выход</button>
+        </div>
+    </div>
+</nav>
+
+<!-- Admin Panel Layout -->
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar Menu -->
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">
+                            <span data-feather="home"></span>
+                            Редактор
+                        </a>
+                    </li>
+                    <!-- More menu items -->
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Добро пожаловать в Админ-Панель</h1>
+            </div>
+
+            <!-- Content goes here -->
+        </main>
+    </div>
+</div>
+{% endblock %}
