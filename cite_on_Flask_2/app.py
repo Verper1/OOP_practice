@@ -1,44 +1,10 @@
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+from flask_login import login_user, logout_user, login_required, current_user
+from flask import render_template, request, redirect, url_for, flash
 
-from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import CheckConstraint
-from dotenv import load_dotenv
-import os
+from config import login_manager, app, db
+from models import User
+from forms import ContactForm
 
-
-load_dotenv()
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = os.environ.get('SECRET_KEY')
-
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
-
-class User(UserMixin, db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    nickname = db.Column(db.String(15), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-
-    __table_args__ = (
-        CheckConstraint("nickname !~ '[[:punct:]]'", name='check_nickname_no_punctuation'),
-    )
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-with app.app_context():
-    db.create_all()
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -55,9 +21,10 @@ def comments():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        nickname = request.form['nickname']
-        password = request.form['password']
+    form = ContactForm()
+    if form.validate_on_submit():
+        nickname = form.nickname.data
+        password = form.password.data
 
         user = User.query.filter_by(nickname=nickname).first()
         if user and user.check_password(password):
@@ -66,14 +33,20 @@ def login():
             return redirect(url_for('index'))
         else:
             flash('Неверное имя пользователя или пароль', 'danger')
-
-    return render_template('login.html')
+    else:
+        # Если форма не прошла валидацию, ошибки доступны в form.errors
+        if request.method == 'POST':
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"Ошибка в поле {getattr(form, field).label.text}: {error}", 'error')
+    return render_template('login.html', form=form)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        nickname = request.form['nickname']
-        password = request.form['password']
+    form = ContactForm()
+    if form.validate_on_submit():
+        nickname = form.nickname.data
+        password = form.password.data
 
         if User.query.filter_by(nickname=nickname).first():
             flash('Это имя пользователя уже занято', 'danger')
@@ -84,8 +57,13 @@ def register():
             db.session.commit()
             flash('Регистрация прошла успешно! Теперь вы можете войти.', 'success')
             return redirect(url_for('login'))
-
-    return render_template('register.html')
+    else:
+        # Если форма не прошла валидацию, ошибки доступны в form.errors
+        if request.method == 'POST':
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"Ошибка в поле {getattr(form, field).label.text}: {error}", 'error')
+    return render_template('register.html', form=form)
 
 @app.route('/logout')
 @login_required
@@ -97,9 +75,10 @@ def logout():
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
-    if request.method == 'POST':
-        new_nickname = request.form.get('nickname')
-        new_password = request.form.get('password')
+    form = ContactForm()
+    if form.validate_on_submit():
+        new_nickname = form.nickname.data
+        new_password = form.password.data
 
         if new_nickname and new_nickname != current_user.nickname:
             if User.query.filter_by(nickname=new_nickname).first():
@@ -113,8 +92,16 @@ def account():
         db.session.commit()
         flash('Данные успешно обновлены', 'success')
         return redirect(url_for('account'))
+    else:
+        # Если форма не прошла валидацию, ошибки доступны в form.errors
+        if request.method == 'POST':
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"Ошибка в поле {getattr(form, field).label.text}: {error}", 'error')
 
-    return render_template('account.html', user=current_user)
+    return render_template('account.html', form=form)
+
+    # return render_template('account.html', user=current_user)
 
 
 if __name__ == '__main__':

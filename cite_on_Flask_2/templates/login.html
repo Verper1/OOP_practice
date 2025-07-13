@@ -6,14 +6,18 @@
 {% block body %}
     <h1>Авторизация</h1>
     <br>
-    <form method="POST">
-        <label>Имя пользователя:</label>
-        <input type="text" name="nickname" required>
-        <br><br>
-        <label>Пароль:</label>
-        <input type="password" name="password" required>
-        <br><br>
-        <button type="submit">Войти</button>
+    <form action="" method="post">
+
+        {{ form.csrf_token() }}
+
+        {% for field in form if field.name != "csrf_token" %}
+        <p>{{ field.label() if field.name != "submit" }} {{ field }}</p>
+        <p>
+            {% for error in field.errors %}
+            {{ error }}
+            {% endfor %}
+        </p>
+        {% endfor %}
     </form>
     <br>
     <p>Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
