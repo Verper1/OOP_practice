@@ -101,8 +101,6 @@ def account():
 
     return render_template('account.html', form=form)
 
-    # return render_template('account.html', user=current_user)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
