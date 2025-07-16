@@ -1,9 +1,16 @@
 from flask_login import login_user, logout_user, login_required, current_user
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, abort
 
 from config import login_manager, app, db
-from models import User
-from forms import ContactForm
+from models import User, Comment
+from forms import ContactForm, CommentForm
+from datetime import datetime, timezone
+
+
+def get_current_user_nickname():
+    if current_user.is_authenticated:
+        return current_user.nickname  # зависит от вашей модели User
+    return None
 
 
 @login_manager.user_loader
@@ -15,9 +22,48 @@ def load_user(user_id):
 def index():
     return render_template('index.html')
 
-@app.route('/comments')
+@app.route('/comments', methods=['GET', 'POST'])
 def comments():
-    return render_template('comments.html')
+    form = CommentForm()
+    all_comments = Comment.query.order_by(Comment.created_at.desc()).all()
+
+    if current_user.is_authenticated:
+        if form.validate_on_submit():
+            nickname = get_current_user_nickname()
+            # Создаем комментарий
+            comment = Comment(
+                user_nickname=nickname,
+                text=form.text.data,
+                created_at=datetime.now(timezone.utc)
+            )
+            db.session.add(comment)
+            db.session.commit()
+            flash('Комментарий успешно добавлен!', 'success')
+            return redirect(url_for('comments'))
+        else:
+            if request.method == 'POST':
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        flash(f"Ошибка в поле {getattr(form, field).label.text}: {error}", 'error')
+    else:
+        flash("Вам нужно сначала войти в аккаунт!", 'danger')
+
+    return render_template('comments.html', comments=all_comments, form=form)
+
+@app.route('/comment/delete/<int:comment_id>', methods=['POST'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+
+    # Проверяем, что текущий пользователь — автор комментария
+    if comment.user_nickname != current_user.nickname:
+        abort(403)  # Запрещено
+
+    db.session.delete(comment)
+    db.session.commit()
+
+    flash('Комментарий удалён.', 'success')
+    return redirect(url_for('comments'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

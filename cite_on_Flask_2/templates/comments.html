@@ -4,8 +4,43 @@
 
 
 {% block body %}
-    <main class="px-3">
-        <h1>Здесь будут стена с комментариями.</h1>
-        <p class="lead">Эта страница будет наполнена в будущем комментариями.</p>
-    </main>
+    <h2>Стена комментариев</h2>
+    {% for comment in comments %}
+        <div class="comment-block">
+            <b>{{ comment.user_nickname }}</b>
+            <span style="color:gray">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            <p>{{ comment.text }}</p>
+
+            {% if current_user.is_authenticated and comment.user_nickname == current_user.nickname %}
+                <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="post" style="display:inline;">
+                    {{ form.hidden_tag() }}
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Удалить комментарий?')">Удалить</button>
+                </form>
+            {% endif %}
+
+            <hr>
+        </div>
+    {% else %}
+        <p>Пока нет комментариев.</p>
+    {% endfor %}
+
+    <h3>Добавить комментарий</h3>
+
+    <form method="post" id="comment-form" action="{{ url_for('comments') }}">
+        {{ form.hidden_tag() }}
+
+        <div class="comment-writer">
+            {{ form.text.label }}<br>
+            {{ form.text(size=60) }}<br>
+            {% if form.text.errors %}
+                <p>
+                    {% for error in form.text.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </p>
+            {% endif %}
+        </div>
+
+        <p>{{ form.submit() }}</p>
+    </form>
 {% endblock %}
