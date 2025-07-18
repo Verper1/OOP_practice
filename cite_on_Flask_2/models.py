@@ -1,7 +1,7 @@
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timezone
 from sqlalchemy import CheckConstraint
 from flask_login import UserMixin
-from datetime import datetime
 from config import db, app
 
 
@@ -14,6 +14,9 @@ class User(UserMixin, db.Model):
     __table_args__ = (
         CheckConstraint("nickname !~ '[[:punct:]]'", name='check_nickname_no_punctuation'),
     )
+
+    def __init__(self, nickname):
+        self.nickname = nickname
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -29,7 +32,7 @@ class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_nickname = db.Column(db.String(100), nullable=False)  # Никнейм из users_db, уникальный
     text = db.Column(db.String(300), nullable=False)  # Текст комментария, до 300 символов
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Дата и время создания
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))  # Дата и время создания
 
     def __repr__(self):
         return f'<Comment {self.id} от {self.user_nickname}>'

@@ -1,15 +1,16 @@
 from flask_login import login_user, logout_user, login_required, current_user
 from flask import render_template, request, redirect, url_for, flash, abort
+from flask_limiter import RateLimitExceeded
 
-from config import login_manager, app, db
-from models import User, Comment
-from forms import ContactForm, CommentForm
+from config import login_manager, app, db, limiter
+from forms import LoginForm, RegisterForm, CommentForm
 from datetime import datetime, timezone
+from models import User, Comment
 
 
 def get_current_user_nickname():
     if current_user.is_authenticated:
-        return current_user.nickname  # зависит от вашей модели User
+        return current_user.nickname
     return None
 
 
@@ -23,6 +24,7 @@ def index():
     return render_template('index.html')
 
 @app.route('/comments', methods=['GET', 'POST'])
+@limiter.limit("2 per hour", key_func=get_current_user_nickname, methods=["POST"])
 def comments():
     form = CommentForm()
     all_comments = Comment.query.order_by(Comment.created_at.desc()).all()
@@ -45,10 +47,17 @@ def comments():
                 for field, errors in form.errors.items():
                     for error in errors:
                         flash(f"Ошибка в поле {getattr(form, field).label.text}: {error}", 'error')
-    else:
+    elif not current_user.is_authenticated and form.validate_on_submit():
         flash("Вам нужно сначала войти в аккаунт!", 'danger')
 
     return render_template('comments.html', comments=all_comments, form=form)
+
+
+@app.errorhandler(RateLimitExceeded)
+def handle_rate_limit(e):
+    flash('Вы достигли лимита комментариев. Попробуйте еще раз позже!', 'warning')
+    return render_template('comments.html', comments=Comment.query.order_by(
+        Comment.created_at.desc()).all(),form=CommentForm()), 200
 
 @app.route('/comment/delete/<int:comment_id>', methods=['POST'])
 @login_required
@@ -56,7 +65,7 @@ def delete_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
 
     # Проверяем, что текущий пользователь — автор комментария
-    if comment.user_nickname != current_user.nickname:
+    if comment.user_nickname != current_user.nickname and current_user.nickname != 'admin':
         abort(403)  # Запрещено
 
     db.session.delete(comment)
@@ -67,7 +76,7 @@ def delete_comment(comment_id):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    form = ContactForm()
+    form = LoginForm()
     if form.validate_on_submit():
         nickname = form.nickname.data
         password = form.password.data
@@ -75,7 +84,10 @@ def login():
         user = User.query.filter_by(nickname=nickname).first()
         if user and user.check_password(password):
             login_user(user)
-            flash('Вы успешно вошли в систему!', 'success')
+            if nickname == 'admin':
+                flash('Вы успешно вошли в систему, как администратор!', 'success')
+            else:
+                flash('Вы успешно вошли в систему!', 'success')
             return redirect(url_for('index'))
         else:
             flash('Неверное имя пользователя или пароль', 'danger')
@@ -89,20 +101,24 @@ def login():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    form = ContactForm()
+    form = RegisterForm()
     if form.validate_on_submit():
         nickname = form.nickname.data
         password = form.password.data
+        repeated_password = form.repeat_password.data
 
-        if User.query.filter_by(nickname=nickname).first():
-            flash('Это имя пользователя уже занято', 'danger')
+        if User.query.filter_by(nickname=nickname).first() or nickname.lower() == 'admin':
+            flash('Это имя пользователя уже занято!', 'danger')
+        elif repeated_password != password:
+            flash('Пароль не совпадает!', 'danger')
         else:
             user = User(nickname=nickname)
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
-            flash('Регистрация прошла успешно! Теперь вы можете войти.', 'success')
-            return redirect(url_for('login'))
+            # flash('Регистрация прошла успешно! Теперь вы можете войти.', 'success')
+            login()
+            return redirect(url_for('index'))
     else:
         # Если форма не прошла валидацию, ошибки доступны в form.errors
         if request.method == 'POST':
@@ -118,18 +134,22 @@ def logout():
     flash('Вы вышли из системы', 'info')
     return redirect(url_for('index'))
 
-@app.route('/account', methods=['GET', 'POST'])
+@app.route('/account_cabinet', methods=['GET', 'POST'])
 @login_required
-def account():
-    form = ContactForm()
+def account_cabinet():
+    form = RegisterForm()
     if form.validate_on_submit():
         new_nickname = form.nickname.data
         new_password = form.password.data
+        new_repeated_password = form.repeat_password.data
 
         if new_nickname and new_nickname != current_user.nickname:
             if User.query.filter_by(nickname=new_nickname).first():
                 flash('Этот никнейм уже занят', 'danger')
-                return redirect(url_for('account'))
+                return redirect(url_for('account_cabinet'))
+            elif new_repeated_password != new_password:
+                flash('Пароль не совпадает!', 'danger')
+                return redirect(url_for('account_cabinet'))
             current_user.nickname = new_nickname
 
         if new_password:
@@ -137,7 +157,7 @@ def account():
 
         db.session.commit()
         flash('Данные успешно обновлены', 'success')
-        return redirect(url_for('account'))
+        return redirect(url_for('account_cabinet'))
     else:
         # Если форма не прошла валидацию, ошибки доступны в form.errors
         if request.method == 'POST':
@@ -145,9 +165,8 @@ def account():
                 for error in errors:
                     flash(f"Ошибка в поле {getattr(form, field).label.text}: {error}", 'error')
 
-    return render_template('account.html', form=form)
+    return render_template('account_cabinet.html', form=form)
 
 
 if __name__ == '__main__':
     app.run(debug=True)
-    

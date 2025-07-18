@@ -4,9 +4,16 @@ from wtforms.fields.simple import PasswordField, TextAreaField
 from wtforms.validators import DataRequired, Length
 
 
-class ContactForm(FlaskForm):
+class LoginForm(FlaskForm):
     nickname = StringField("Никнейм: ", validators=[DataRequired()])
     password = PasswordField("Пароль: ", validators=[DataRequired(), Length(min=6)])
+    submit = SubmitField("Подтвердить")
+
+
+class RegisterForm(FlaskForm):
+    nickname = StringField("Никнейм: ", validators=[DataRequired()])
+    password = PasswordField("Пароль: ", validators=[DataRequired(), Length(min=6)])
+    repeat_password = PasswordField("Повторить пароль: ", validators=[DataRequired(), Length(min=6)])
     submit = SubmitField("Подтвердить")
 
 

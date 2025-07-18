@@ -11,7 +11,7 @@
             <span style="color:gray">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
             <p>{{ comment.text }}</p>
 
-            {% if current_user.is_authenticated and comment.user_nickname == current_user.nickname %}
+            {% if current_user.is_authenticated and (comment.user_nickname == current_user.nickname or current_user.nickname == "admin") %}
                 <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="post" style="display:inline;">
                     {{ form.hidden_tag() }}
                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Удалить комментарий?')">Удалить</button>
@@ -26,21 +26,25 @@
 
     <h3>Добавить комментарий</h3>
 
-    <form method="post" id="comment-form" action="{{ url_for('comments') }}">
-        {{ form.hidden_tag() }}
+    {% if current_user.is_authenticated %}
+        <form method="post" id="comment-form" action="{{ url_for('comments') }}">
+            {{ form.hidden_tag() }}
 
-        <div class="comment-writer">
-            {{ form.text.label }}<br>
-            {{ form.text(size=60) }}<br>
-            {% if form.text.errors %}
-                <p>
-                    {% for error in form.text.errors %}
-                        {{ error }}
-                    {% endfor %}
-                </p>
-            {% endif %}
-        </div>
+            <div class="comment-writer">
+                <br>{{ form.text(size=60) }}<br>
+                {% if form.text.errors %}
+                    <p>
+                        {% for error in form.text.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </p>
+                {% endif %}
+            </div>
 
-        <p>{{ form.submit() }}</p>
-    </form>
+        <br><p>{{ form.submit() }}</p>
+        </form>
+    {% else %}
+        <p>Нужно <a href="{{ url_for('login') }}">войти</a> или <a href="{{ url_for('register') }}">зарегистрироваться</a>!</p>
+    {% endif %}
+
 {% endblock %}
