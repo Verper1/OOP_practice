@@ -7,7 +7,7 @@
     <h2>Стена комментариев</h2>
     {% for comment in comments %}
         <div class="comment-block">
-            <b>{{ comment.user_nickname }}</b>
+            <b>{{ comment.user.nickname }}</b>
             <span style="color:gray">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
             <p>{{ comment.text }}</p>
 

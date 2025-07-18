@@ -26,13 +26,14 @@ class User(UserMixin, db.Model):
 
 
 class Comment(db.Model):
-    __bind_key__ = 'comments'
     __tablename__ = 'comments'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_nickname = db.Column(db.String(100), nullable=False)  # Никнейм из users_db, уникальный
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     text = db.Column(db.String(300), nullable=False)  # Текст комментария, до 300 символов
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))  # Дата и время создания
+
+    user = db.relationship('User', backref='comments')
 
     def __repr__(self):
         return f'<Comment {self.id} от {self.user_nickname}>'

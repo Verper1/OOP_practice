@@ -24,17 +24,17 @@ def index():
     return render_template('index.html')
 
 @app.route('/comments', methods=['GET', 'POST'])
-@limiter.limit("2 per hour", key_func=get_current_user_nickname, methods=["POST"])
+@limiter.limit("3 per day", key_func=get_current_user_nickname, methods=["POST"])
 def comments():
     form = CommentForm()
     all_comments = Comment.query.order_by(Comment.created_at.desc()).all()
 
     if current_user.is_authenticated:
         if form.validate_on_submit():
-            nickname = get_current_user_nickname()
+            user_id = current_user.id
             # Создаем комментарий
             comment = Comment(
-                user_nickname=nickname,
+                user_id=user_id,
                 text=form.text.data,
                 created_at=datetime.now(timezone.utc)
             )
@@ -65,7 +65,7 @@ def delete_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
 
     # Проверяем, что текущий пользователь — автор комментария
-    if comment.user_nickname != current_user.nickname and current_user.nickname != 'admin':
+    if comment.user_id != current_user.id and current_user.nickname != 'admin':
         abort(403)  # Запрещено
 
     db.session.delete(comment)
@@ -116,7 +116,6 @@ def register():
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
-            # flash('Регистрация прошла успешно! Теперь вы можете войти.', 'success')
             login()
             return redirect(url_for('index'))
     else:
@@ -137,6 +136,10 @@ def logout():
 @app.route('/account_cabinet', methods=['GET', 'POST'])
 @login_required
 def account_cabinet():
+    # users = User.query.all()
+    # for user in users:
+    #     print(user.id, user.nickname, user.password_hash)
+
     form = RegisterForm()
     if form.validate_on_submit():
         new_nickname = form.nickname.data

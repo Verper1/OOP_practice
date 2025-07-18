@@ -13,11 +13,11 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL_USERS')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_BINDS'] = {
-    'comments': os.environ.get('DATABASE_URL_COMMENTS'),
-}
+# app.config['SQLALCHEMY_BINDS'] = {
+#     'comments': os.environ.get('DATABASE_URL'),
+# }
 db = SQLAlchemy(app)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 csrf = CSRFProtect(app)
