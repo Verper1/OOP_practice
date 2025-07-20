@@ -27,3 +27,4 @@ class CommentForm(FlaskForm):
         render_kw={"rows": 3, "cols": 60}
     )
     submit = SubmitField('Отправить')
+    
