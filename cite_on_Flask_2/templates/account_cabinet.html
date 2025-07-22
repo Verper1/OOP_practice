@@ -5,6 +5,7 @@
 
 {% block body %}
     <h1>Личный кабинет</h1>
+    <h4>Тут вы можете поменять свой пароль и никнейм</h4>
     <br>
     <form action="" method="post" class="form-centered">
         {{ form.csrf_token() }}
@@ -22,4 +23,5 @@
     <div style="text-align:center; margin-top: 1em;">
         <a id="logout_cabinet_btn" class="logout-btn" href="{{ url_for('logout') }}">Выйти</a>
     </div>
+    <br>
 {% endblock %}

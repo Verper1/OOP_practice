@@ -37,7 +37,12 @@
             {% if current_user.is_authenticated and (comment.user.nickname == current_user.nickname or current_user.nickname == "admin") %}
                 <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="post" style="display:inline;">
                     {{ form.hidden_tag() }}
-                    <button type="submit" class="btn btn-danger btn-sm delete-btn" onclick="return confirm('Удалить комментарий?')">Удалить</button>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                        Удалить
+                    </button>
+                    <button type="submit" class="btn btn-danger btn-sm delete-btn" style="display:none;">
+                        Точно удалить
+                    </button>
                 </form>
             {% endif %}
         </div>
